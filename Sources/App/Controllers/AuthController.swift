@@ -10,11 +10,17 @@ import Fluent
 
 struct AuthController: RouteCollection {
     
+    // MARK: - Private properties
+    
     private let userService: UserService
+    
+    // MARK: - Initializer
     
     init (userService: UserService) {
         self.userService = userService
     }
+    
+    // MARK: - Boot
     
     func boot(routes: RoutesBuilder) throws {
         let authRoutes = routes.grouped("auth")
