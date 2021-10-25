@@ -10,6 +10,12 @@ import Fluent
 
 struct AuthController: RouteCollection {
     
+    private let userService: UserService
+    
+    init (userService: UserService) {
+        self.userService = userService
+    }
+    
     func boot(routes: RoutesBuilder) throws {
         let authRoutes = routes.grouped("auth")
         authRoutes.post("register", use: register)
@@ -31,7 +37,7 @@ private extension AuthController {
         let user = try User.create(from: userSignup)
         var token: Token!
         
-        return checkIfUserExists(userSignup.email, req: req).flatMap { exists in
+        return userService.checkIfUserExists(userSignup.email, req: req).flatMap { exists in
             guard !exists else {
                 return req.eventLoop.future(error: UserError.emailTaken)
             }
@@ -59,16 +65,5 @@ private extension AuthController {
     
     func getCurrentUser(req: Request) throws -> User.Public {
         try req.auth.require(User.self).asPublic()
-    }
-}
-
-// TODO: Clean up
-
-private extension AuthController {
-    private func checkIfUserExists(_ email: String, req: Request) -> EventLoopFuture<Bool> {
-        User.query(on: req.db)
-            .filter(\.$email == email)
-            .first()
-            .map { $0 != nil }
     }
 }
