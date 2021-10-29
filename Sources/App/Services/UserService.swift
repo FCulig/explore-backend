@@ -8,12 +8,16 @@
 import Vapor
 import Fluent
 
+// MARK: - UserService -
+
 final class UserService {
+    
+    // MARK: - Initializer -
     
     init() { }
 }
 
-// MARK: - Public methods
+// MARK: - Public methods -
 
 extension UserService {
     func checkIfUserExists(_ email: String, req: Request) -> EventLoopFuture<Bool> {

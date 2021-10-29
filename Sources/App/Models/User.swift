@@ -8,7 +8,7 @@
 import Fluent
 import Vapor
 
-// MARK: - User model
+// MARK: - User model -
 
 final class User: Model {
     
@@ -42,7 +42,7 @@ final class User: Model {
     @Timestamp(key: "updated_at", on: .update)
     var updatedAt: Date?
     
-    // MARK: - Initializers
+    // MARK: - Initializers -
     
     init() {}
     
@@ -53,7 +53,7 @@ final class User: Model {
     }
 }
 
-// MARK: - User extension
+// MARK: - User extension -
 
 extension User {
     static func create(from userSignup: UserSignup) throws -> User {
@@ -84,7 +84,7 @@ extension User {
     }
 }
 
-// MARK: - Authenticable
+// MARK: - Authenticable -
 
 extension User: ModelAuthenticatable {
     static let usernameKey = \User.$email

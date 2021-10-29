@@ -10,24 +10,24 @@ import Vapor
 
 struct RouteController: RouteCollection {
     
-    // MARK: - Private properties
+    // MARK: - Private properties -
     
     private let routeService: RouteService
     
-    // MARK: - Initializer
+    // MARK: - Initializer -
     
     init (routeService: RouteService) {
         self.routeService = routeService
     }
     
-    // MARK: - Boot
+    // MARK: - Boot -
     
     func boot(routes: RoutesBuilder) throws {
         let routeRoutes = routes.grouped("route")
     }
 }
 
-// MARK: - Routes
+// MARK: - Routes -
 
 private extension RouteController {
     

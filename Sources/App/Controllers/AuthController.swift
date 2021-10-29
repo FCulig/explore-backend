@@ -8,19 +8,21 @@
 import Vapor
 import Fluent
 
+// MARK: - AuthController -
+
 struct AuthController: RouteCollection {
     
-    // MARK: - Private properties
+    // MARK: - Private properties -
     
     private let userService: UserService
     
-    // MARK: - Initializer
+    // MARK: - Initializer -
     
     init (userService: UserService) {
         self.userService = userService
     }
     
-    // MARK: - Boot
+    // MARK: - Boot -
     
     func boot(routes: RoutesBuilder) throws {
         let authRoutes = routes.grouped("auth")
@@ -34,7 +36,7 @@ struct AuthController: RouteCollection {
     }
 }
 
-// MARK: - Routes
+// MARK: - Routes -
 
 private extension AuthController {
     func register(req: Request) throws -> EventLoopFuture<NewSession> {

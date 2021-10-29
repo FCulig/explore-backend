@@ -8,20 +8,22 @@
 import Vapor
 import Fluent
 
+// MARK: - SessionSource -
+
 enum SessionSource: Int, Content {
     case signup
     case login
 }
 
-// MARK: - Token model
+// MARK: - Token model -
 
 final class Token: Model {
     
-    // MARK: - Schema definition
+    // MARK: - Schema definition -
     
     static let schema = "tokens"
     
-    // MARK: - Token properties
+    // MARK: - Token properties -
     
     @ID(key: .id)
     var id: UUID?
@@ -41,6 +43,8 @@ final class Token: Model {
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     
+    // MARK: - Initializers -
+    
     init() {}
     
     init(id: UUID? = nil,
@@ -56,6 +60,8 @@ final class Token: Model {
         self.expiresAt = expiresAt
     }
 }
+
+// MARK: - ModelTokenAuthenticatable -
 
 extension Token: ModelTokenAuthenticatable {
     static let valueKey = \Token.$value
