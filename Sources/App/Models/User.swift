@@ -66,17 +66,6 @@ extension User {
         )
     }
     
-    func createToken(source: SessionSource) throws -> Token {
-        let calendar = Calendar(identifier: .gregorian)
-        let expiryDate = calendar.date(byAdding: .year, value: 1, to: Date())
-        return try Token(
-            userId: requireID(),
-            token: [UInt8].random(count: 16).base64,
-            source: source,
-            expiresAt: expiryDate
-        )
-    }
-    
     func asPublic() throws -> Public {
         Public(
             id: try requireID(),
@@ -98,7 +87,6 @@ extension User: ModelAuthenticatable {
     }
 }
 
-
 // MARK: - UserSignup -
 
 struct UserSignup: Content {
@@ -114,11 +102,3 @@ extension UserSignup: Validatable {
         validations.add("password", as: String.self, is: .count(6...))
     }
 }
-
-// MARK: - NewSession -
-
-struct NewSession: Content {
-    let token: String
-    let user: User.Public
-}
-

@@ -27,11 +27,9 @@ struct AuthController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let authRoutes = routes.grouped("auth")
         authRoutes.post("register", use: register)
+        authRoutes.post("login", use: login)
         
-        let passwordProtected = authRoutes.grouped(User.authenticator())
-        passwordProtected.post("login", use: login)
-
-        let tokenProtected = authRoutes.grouped(Token.authenticator())
+        let tokenProtected = authRoutes.grouped(Token.authenticator(), Token.guardMiddleware())
         tokenProtected.get("me", use: getCurrentUser)
     }
 }
@@ -39,39 +37,45 @@ struct AuthController: RouteCollection {
 // MARK: - Routes -
 
 private extension AuthController {
-    func register(req: Request) throws -> EventLoopFuture<NewSession> {
+    func register(req: Request) throws -> EventLoopFuture<User.Public> {
         try UserSignup.validate(content: req)
         let userSignup = try req.content.decode(UserSignup.self)
         let user = try User.create(from: userSignup)
-        var token: Token!
         
-        return userService.checkIfUserExists(userSignup.email, req: req).flatMap { exists in
+        return userService.checkIfUserExists(userSignup.email, req: req).flatMap{ exists in
             guard !exists else {
                 return req.eventLoop.future(error: UserError.emailTaken)
             }
             
             return user.save(on: req.db)
-        }.flatMap {
-            guard let newToken = try? user.createToken(source: .signup) else {
-                return req.eventLoop.future(error: Abort(.internalServerError))
-            }
-            token = newToken
-            return token.save(on: req.db)
-        }.flatMapThrowing {
-            NewSession(token: token.value, user: try user.asPublic())
+        }.flatMapThrowing{
+            try user.asPublic()
         }
     }
     
-    func login(req: Request) throws -> EventLoopFuture<NewSession> {
-        let user = try req.auth.require(User.self)
-        let token = try user.createToken(source: .login)
+    func login(req: Request) throws -> EventLoopFuture<TokenResponse> {
+        let loginCredentials = try req.content.decode(UserSignup.self)
         
-        return token.save(on: req.db).flatMapThrowing {
-            NewSession(token: token.value, user: try user.asPublic())
-        }
+        return User.query(on: req.db)
+            .filter(\.$email == loginCredentials.email)
+            .first()
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { $0 }
+            .flatMapThrowing { user in
+                if try user.verify(password: loginCredentials.password) {
+                    let payload = try Token(userId: user.requireID())
+                    return TokenResponse(token: try req.jwt.sign(payload))
+                }
+                throw Abort(.unauthorized)
+            }
     }
     
-    func getCurrentUser(req: Request) throws -> User.Public {
-        try req.auth.require(User.self).asPublic()
+    func getCurrentUser(req: Request) throws -> EventLoopFuture<User.Public> {
+        let sessionToken = try req.auth.require(Token.self)
+        return User.query(on: req.db)
+            .filter(\.$id == sessionToken.userId)
+            .first()
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { try $0.asPublic() }
     }
 }

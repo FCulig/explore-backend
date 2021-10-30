@@ -6,72 +6,35 @@
 //
 
 import Vapor
-import Fluent
+import JWT
 
-// MARK: - SessionSource -
+// MARK: - Token -
 
-enum SessionSource: Int, Content {
-    case signup
-    case login
-}
-
-// MARK: - Token model -
-
-final class Token: Model {
+struct Token: Content, Authenticatable, JWTPayload {
+    // Constants
+    let expirationTime = 60 * 60 * 24 * 30
     
-    // MARK: - Schema definition -
+    // Token Data
+    var expiration: ExpirationClaim
+    var userId: UUID
     
-    static let schema = "tokens"
+    init(userId: UUID) {
+        self.userId = userId
+        self.expiration = ExpirationClaim(value: Date().addingTimeInterval(TimeInterval(expirationTime)))
+    }
     
-    // MARK: - Token properties -
+    init(user: User) throws {
+        self.userId = try user.requireID()
+        self.expiration = ExpirationClaim(value: Date().addingTimeInterval(TimeInterval(expirationTime)))
+    }
     
-    @ID(key: .id)
-    var id: UUID?
-    
-    @Parent(key: "user_id")
-    var user: User
-    
-    @Field(key: "value")
-    var value: String
-    
-    @Field(key: "source")
-    var source: SessionSource
-    
-    @Field(key: "expires_at")
-    var expiresAt: Date?
-    
-    @Timestamp(key: "created_at", on: .create)
-    var createdAt: Date?
-    
-    // MARK: - Initializers -
-    
-    init() {}
-    
-    init(id: UUID? = nil,
-         userId: User.IDValue,
-         token: String,
-         source: SessionSource,
-         expiresAt: Date?
-    ) {
-        self.id = id
-        self.$user.id = userId
-        self.value = token
-        self.source = source
-        self.expiresAt = expiresAt
+    func verify(using signer: JWTSigner) throws {
+        try expiration.verifyNotExpired()
     }
 }
 
-// MARK: - ModelTokenAuthenticatable -
+// MARK: - TokenResponse -
 
-extension Token: ModelTokenAuthenticatable {
-    static let valueKey = \Token.$value
-    static let userKey = \Token.$user
-    
-    var isValid: Bool {
-        guard let expiryDate = expiresAt else {
-            return true
-        }
-        
-        return expiryDate > Date()
-    }
+struct TokenResponse: Content {
+    var token: String
 }
