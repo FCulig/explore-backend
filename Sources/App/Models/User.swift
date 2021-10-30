@@ -12,20 +12,20 @@ import Vapor
 
 final class User: Model {
     
-    // MARK: - Public properties
+    // MARK: - Public properties -
     
     struct Public: Content {
-        let email: String
         let id: UUID
+        let email: String
         let createdAt: Date?
         let updatedAt: Date?
     }
     
-    // MARK: - Schema definition
+    // MARK: - Schema definition -
     
     static let schema = "users"
     
-    // MARK: - User properties
+    // MARK: - User properties -
     
     @ID(key: .id)
     var id: UUID?
@@ -35,6 +35,9 @@ final class User: Model {
     
     @Field(key: "password")
     var password: String
+    
+    @Children(for: \.$user)
+    var routes: [Route]
     
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -76,8 +79,8 @@ extension User {
     
     func asPublic() throws -> Public {
         Public(
-            email: email,
             id: try requireID(),
+            email: email,
             createdAt: createdAt,
             updatedAt: updatedAt
         )
@@ -96,14 +99,14 @@ extension User: ModelAuthenticatable {
 }
 
 
-// MARK: - UserSignup
+// MARK: - UserSignup -
 
 struct UserSignup: Content {
     let email: String
     let password: String
 }
 
-// MARK: - UserSignup validation
+// MARK: - UserSignup validation -
 
 extension UserSignup: Validatable {
     static func validations(_ validations: inout Validations) {
@@ -112,7 +115,7 @@ extension UserSignup: Validatable {
     }
 }
 
-// MARK: - NewSession
+// MARK: - NewSession -
 
 struct NewSession: Content {
     let token: String

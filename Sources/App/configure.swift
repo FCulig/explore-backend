@@ -18,6 +18,7 @@ public func configure(_ app: Application) throws {
     // MARK: - Configure migrations
     app.migrations.add(CreateUsers())
     app.migrations.add(CreateTokens())
+    app.migrations.add(CreateRoutes())
     
     try app.autoMigrate().wait()
     
