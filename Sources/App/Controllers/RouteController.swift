@@ -36,14 +36,34 @@ struct RouteController: RouteCollection {
 // MARK: - Routes -
 
 private extension RouteController {
-    func postRoute(req: Request) throws -> EventLoopFuture<Route> {
+    func postRoute(req: Request) throws -> EventLoopFuture<Response> {
+        let input = try req.content.decode(CreateRoute.self)
+        
+        let imageName = "\(NSDate().timeIntervalSince1970)-\(input.image.filename)"
+        let path = "/Users/filipculig/Desktop/repos/tourist-backend/Explore/Public/\(imageName)"
+        
         let sessionToken = try req.auth.require(Token.self)
         let createRoute = try req.content.decode(CreateRoute.self)
-        let route = try Route.create(from: createRoute, user_id: sessionToken.userId)
-
-        return route.save(on: req.db).map { route }
+        let route = try Route.create(from: createRoute, image_name: imageName, user_id: sessionToken.userId)
+        
+        return route.save(on: req.db)
+            .flatMap {
+                req.application.fileio.openFile(path: path,
+                                                mode: .write,
+                                                flags: .allowFileCreation(posixMode: 0x744),
+                                                eventLoop: req.eventLoop)
+            }
+            .flatMap { handle in
+                req.application.fileio.write(fileHandle: handle,
+                                             buffer: input.image.data,
+                                             eventLoop: req.eventLoop)
+                    .flatMapThrowing { _ in
+                        try handle.close()
+                        return Response(status: .created)
+                    }
+            }
     }
-
+    
     func getAllRoutes(req: Request) throws -> EventLoopFuture<[Route]> {
         return Route.query(on: req.db).with(\.$user).all()
     }

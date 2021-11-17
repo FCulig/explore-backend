@@ -30,6 +30,9 @@ final class Route: Model, Content {
     @Field(key: "name")
     var name: String
     
+    @Field(key: "image_name")
+    var image_name: String
+    
     @Parent(key: "user_id")
     var user: User
     
@@ -48,12 +51,14 @@ final class Route: Model, Content {
         coordinates: String,
         type: String,
         name: String,
+        image_name: String,
         user_id: User.IDValue
     ) {
         self.id = id
         self.coordinates = coordinates
         self.type = type
         self.name = name
+        self.image_name = image_name
         self.$user.id = user_id
     }
 }
@@ -61,11 +66,12 @@ final class Route: Model, Content {
 // MARK: - Route extension -
 
 extension Route {
-    static func create(from createRoute: CreateRoute, user_id: User.IDValue) throws -> Route {
+    static func create(from createRoute: CreateRoute, image_name: String, user_id: User.IDValue) throws -> Route {
         Route(
             coordinates: createRoute.coordinates,
             type: createRoute.type,
             name: createRoute.name,
+            image_name: image_name,
             user_id: user_id
         )
     }
@@ -84,6 +90,7 @@ struct CreateRoute: Content {
     let coordinates: String
     let type: String
     let name: String
+    let image: File
 }
 
 // MARK: - CreateRoute validation -

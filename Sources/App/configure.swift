@@ -6,8 +6,9 @@ import JWT
 // configures your application
 public func configure(_ app: Application) throws {
     // uncomment to serve files from /Public folder
-    // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
-    
+    app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
+    app.routes.defaultMaxBodySize = "5Mb"
+
     let corsConfiguration = CORSMiddleware.Configuration(
         allowedOrigin: .all,
         allowedMethods: [.GET, .POST, .PUT, .OPTIONS, .DELETE, .PATCH],
