@@ -16,6 +16,7 @@ struct CreateRoutes: Migration {
             .field("coordinates", .string, .required)
             .field("type", .string, .required)
             .field("name", .string, .required)
+            .field("description", .string, .required)
             .field("image_name", .string, .required)
             .field("user_id", .uuid, .required, .references("users", .id))
             .field("created_at", .datetime, .required)

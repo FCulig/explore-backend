@@ -30,6 +30,9 @@ final class Route: Model, Content {
     @Field(key: "name")
     var name: String
     
+    @Field(key: "description")
+    var description: String
+    
     @Field(key: "image_name")
     var image_name: String
     
@@ -51,6 +54,7 @@ final class Route: Model, Content {
         coordinates: String,
         type: String,
         name: String,
+        description: String,
         image_name: String,
         user_id: User.IDValue
     ) {
@@ -58,6 +62,7 @@ final class Route: Model, Content {
         self.coordinates = coordinates
         self.type = type
         self.name = name
+        self.description = description
         self.image_name = image_name
         self.$user.id = user_id
     }
@@ -71,6 +76,7 @@ extension Route {
             coordinates: createRoute.coordinates,
             type: createRoute.type,
             name: createRoute.name,
+            description: createRoute.description,
             image_name: image_name,
             user_id: user_id
         )
@@ -90,6 +96,7 @@ struct CreateRoute: Content {
     let coordinates: String
     let type: String
     let name: String
+    let description: String
     let image: File
 }
 
@@ -100,6 +107,7 @@ extension CreateRoute: Validatable {
         validations.add("coordinates", as: String.self, is: !.empty)
         validations.add("type", as: String.self, is: !.empty)
         validations.add("name", as: String.self, is: !.empty)
+        validations.add("description", as: String.self, is: !.empty)
     }
 }
 
