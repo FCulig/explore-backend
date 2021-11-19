@@ -24,12 +24,11 @@ struct RouteController: RouteCollection {
     // MARK: - Boot -
     
     func boot(routes: RoutesBuilder) throws {
-        let routeRoutes = routes
-            .grouped(Token.authenticator(), Token.guardMiddleware())
-            .grouped("route")
-        
-        routeRoutes.post(use: postRoute)
+        let routeRoutes = routes.grouped("route")
         routeRoutes.get(use: getAllRoutes)
+
+        let protectedRoutes = routeRoutes.grouped(Token.authenticator(), Token.guardMiddleware())
+        protectedRoutes.post(use: postRoute)
     }
 }
 
