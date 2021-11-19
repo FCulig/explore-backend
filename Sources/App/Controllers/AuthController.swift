@@ -65,7 +65,7 @@ private extension AuthController {
             .flatMapThrowing { user in
                 if try user.verify(password: loginCredentials.password) {
                     let payload = try Token(userId: user.requireID())
-                    return TokenResponse(token: try req.jwt.sign(payload))
+                    return TokenResponse(token: try req.jwt.sign(payload), user: try user.asPublic())
                 }
                 throw Abort(.unauthorized)
             }

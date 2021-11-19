@@ -37,4 +37,5 @@ struct Token: Content, Authenticatable, JWTPayload {
 
 struct TokenResponse: Content {
     var token: String
+    let user: User.Public
 }
