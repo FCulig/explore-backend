@@ -42,19 +42,20 @@ private extension AuthController {
         let userSignup = try req.content.decode(UserSignup.self)
         let user = try User.create(from: userSignup)
         
-        return userService.checkIfUserExists(userSignup.email, req: req).flatMap{ exists in
-            guard !exists else {
-                return req.eventLoop.future(error: UserError.emailTaken)
+        return userService.checkIfUserExists(email: userSignup.email, username: userSignup.username, req: req)
+            .flatMap{ exists in
+                guard !exists else {
+                    return req.eventLoop.future(error: UserError.emailTaken)
+                }
+                print(user)
+                return user.save(on: req.db)
+            }.flatMapThrowing{
+                try user.asPublic()
             }
-            
-            return user.save(on: req.db)
-        }.flatMapThrowing{
-            try user.asPublic()
-        }
     }
     
     func login(req: Request) throws -> EventLoopFuture<TokenResponse> {
-        let loginCredentials = try req.content.decode(UserSignup.self)
+        let loginCredentials = try req.content.decode(UserLogin.self)
         
         return User.query(on: req.db)
             .filter(\.$email == loginCredentials.email)

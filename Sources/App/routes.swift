@@ -8,4 +8,5 @@ func routes(_ app: Application) throws {
     
     try apiRoutesV1.register(collection: AuthController(userService: userService))
     try apiRoutesV1.register(collection: RouteController(routeService: routeService))
+    try apiRoutesV1.register(collection: UserController(userService: userService))
 }

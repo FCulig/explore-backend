@@ -16,7 +16,9 @@ final class User: Model {
     
     struct Public: Content {
         let id: UUID
+        let username: String
         let email: String
+        let profile_image: String
         let createdAt: Date?
         let updatedAt: Date?
     }
@@ -33,8 +35,14 @@ final class User: Model {
     @Field(key: "email")
     var email: String
     
+    @Field(key: "username")
+    var username: String
+    
     @Field(key: "password")
     var password: String
+    
+    @Field(key: "profile_image")
+    var profile_image: String
     
     @Children(for: \.$user)
     var routes: [Route]
@@ -49,10 +57,18 @@ final class User: Model {
     
     init() {}
     
-    init(id: UUID? = nil, email: String, password: String) {
+    init(
+        id: UUID? = nil,
+        username: String,
+        email: String,
+        password: String,
+        profile_image: String = "profile_image.jpg"
+    ) {
         self.id = id
         self.email = email
+        self.username = username
         self.password = password
+        self.profile_image = profile_image
     }
 }
 
@@ -61,6 +77,7 @@ final class User: Model {
 extension User {
     static func create(from userSignup: UserSignup) throws -> User {
         User(
+            username: userSignup.username,
             email: userSignup.email,
             password: try Bcrypt.hash(userSignup.password)
         )
@@ -69,7 +86,9 @@ extension User {
     func asPublic() throws -> Public {
         Public(
             id: try requireID(),
+            username: username,
             email: email,
+            profile_image: profile_image,
             createdAt: createdAt,
             updatedAt: updatedAt
         )
@@ -91,6 +110,7 @@ extension User: ModelAuthenticatable {
 
 struct UserSignup: Content {
     let email: String
+    let username: String
     let password: String
 }
 
@@ -99,6 +119,29 @@ struct UserSignup: Content {
 extension UserSignup: Validatable {
     static func validations(_ validations: inout Validations) {
         validations.add("email", as: String.self, is: .email)
+        validations.add("username", as: String.self, is: !.empty)
         validations.add("password", as: String.self, is: .count(6...))
     }
+}
+
+// MARK: - UserLogin -
+
+struct UserLogin: Content {
+    let email: String
+    let password: String
+}
+
+// MARK: - UserLogin validation -
+
+extension UserLogin: Validatable {
+    static func validations(_ validations: inout Validations) {
+        validations.add("email", as: String.self, is: .email)
+        validations.add("password", as: String.self, is: .count(6...))
+    }
+}
+
+// MARK: - UserImageUpdate -
+
+struct UserImageUpdate: Content {
+    let profile_image: File
 }

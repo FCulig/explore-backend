@@ -20,9 +20,10 @@ final class UserService {
 // MARK: - Public methods -
 
 extension UserService {
-    func checkIfUserExists(_ email: String, req: Request) -> EventLoopFuture<Bool> {
+    func checkIfUserExists(email: String, username: String, req: Request) -> EventLoopFuture<Bool> {
         User.query(on: req.db)
             .filter(\.$email == email)
+            .filter(\.$username == username)
             .first()
             .map { $0 != nil }
     }
