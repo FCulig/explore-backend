@@ -23,6 +23,16 @@ final class User: Model {
         let updatedAt: Date?
     }
     
+    struct PublicWithRoutes: Content {
+        let id: UUID
+        let username: String
+        let email: String
+        let profile_image: String
+        let routes: [Route]
+        let createdAt: Date?
+        let updatedAt: Date?
+    }
+    
     // MARK: - Schema definition -
     
     static let schema = "users"
@@ -89,6 +99,18 @@ extension User {
             username: username,
             email: email,
             profile_image: profile_image,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+        )
+    }
+    
+    func asPublicWithRoutes() throws -> PublicWithRoutes {
+        PublicWithRoutes(
+            id: try requireID(),
+            username: username,
+            email: email,
+            profile_image: profile_image,
+            routes: routes,
             createdAt: createdAt,
             updatedAt: updatedAt
         )

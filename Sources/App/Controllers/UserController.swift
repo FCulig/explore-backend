@@ -26,6 +26,7 @@ struct UserController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {
         let userRoutes = routes.grouped("user")
+        userRoutes.get(":username", use: getUserByUsername)
         
         let tokenProtected = userRoutes.grouped(Token.authenticator(), Token.guardMiddleware())
         tokenProtected.put("image", use: updateUserImage)
@@ -35,7 +36,7 @@ struct UserController: RouteCollection {
 // MARK: - Routes -
 
 private extension UserController {
-    func updateUserImage(req: Request) throws -> EventLoopFuture<EventLoopFuture<String>> {
+    func updateUserImage(req: Request) throws -> EventLoopFuture<EventLoopFuture<Response>> {
         let input = try req.content.decode(UserImageUpdate.self)
         
         let imageName = "\(NSDate().timeIntervalSince1970)-\(input.profile_image.filename)"
@@ -69,10 +70,21 @@ private extension UserController {
                 req.application.fileio.write(fileHandle: handle,
                                              buffer: input.profile_image.data,
                                              eventLoop: req.eventLoop)
-                    .flatMapThrowing { _ -> String in
+                    .flatMapThrowing { _ -> Response in
                         try handle.close()
-                        return "imageName"
+                        return Response(status: .ok)
                     }
             }
+    }
+    
+    func getUserByUsername(req: Request) throws -> EventLoopFuture<User.PublicWithRoutes> {
+        let username = req.parameters.get("username")!
+        return User.query(on: req.db)
+            .with(\.$routes)
+            .filter(\.$username == username)
+            .first()
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { $0 }
+            .flatMapThrowing { try $0.asPublicWithRoutes() }
     }
 }
