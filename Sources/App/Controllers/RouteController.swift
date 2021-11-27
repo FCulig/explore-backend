@@ -8,6 +8,7 @@
 import Fluent
 import Vapor
 import MultipartKit
+import Foundation
 
 struct RouteController: RouteCollection {
     
@@ -26,6 +27,7 @@ struct RouteController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let routeRoutes = routes.grouped("route")
         routeRoutes.get(use: getAllRoutes)
+        routeRoutes.get(":routeId", use: getRouteById)
 
         let protectedRoutes = routeRoutes.grouped(Token.authenticator(), Token.guardMiddleware())
         protectedRoutes.post(use: postRoute)
@@ -65,5 +67,15 @@ private extension RouteController {
     
     func getAllRoutes(req: Request) throws -> EventLoopFuture<[Route]> {
         return Route.query(on: req.db).with(\.$user).all()
+    }
+    
+    func getRouteById(req: Request) throws -> EventLoopFuture<Route> {
+        let routeId = req.parameters.get("routeId")! as UUID
+        return Route.query(on: req.db)
+            .with(\.$user)
+            .filter(\.$id == routeId)
+            .first()
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { $0 }
     }
 }
