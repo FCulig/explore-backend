@@ -47,7 +47,6 @@ private extension AuthController {
                 guard !exists else {
                     return req.eventLoop.future(error: UserError.emailTaken)
                 }
-                print(user)
                 return user.save(on: req.db)
             }.flatMapThrowing{
                 try user.asPublic()
@@ -60,14 +59,14 @@ private extension AuthController {
         return User.query(on: req.db)
             .filter(\.$email == loginCredentials.email)
             .first()
-            .unwrap(or: Abort(.notFound))
+            .unwrap(or: Abort(.unauthorized, reason: "Invalid email or password!"))
             .flatMapThrowing { $0 }
             .flatMapThrowing { user in
                 if try user.verify(password: loginCredentials.password) {
                     let payload = try Token(userId: user.requireID())
                     return TokenResponse(token: try req.jwt.sign(payload), user: try user.asPublic())
                 }
-                throw Abort(.unauthorized)
+                throw Abort(.unauthorized, reason: "Invalid email or password!")
             }
     }
     
