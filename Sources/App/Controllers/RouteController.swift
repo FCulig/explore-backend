@@ -31,6 +31,7 @@ struct RouteController: RouteCollection {
 
         let protectedRoutes = routeRoutes.grouped(Token.authenticator(), Token.guardMiddleware())
         protectedRoutes.post(use: postRoute)
+        protectedRoutes.delete(":routeId", use: deleteRoute)
     }
 }
 
@@ -63,6 +64,27 @@ private extension RouteController {
                         return Response(status: .created)
                     }
             }
+    }
+    
+    func deleteRoute(req: Request) throws -> EventLoopFuture<Response> {
+        let routeId = req.parameters.get("routeId")! as UUID
+        let sessionToken = try req.auth.require(Token.self)
+        
+        let basePath = "/Users/filipculig/Desktop/repos/tourist-backend/Explore/Public/"
+
+        return Route.query(on: req.db)
+            .filter(\.$id == routeId)
+            .filter(\.$user.$id == sessionToken.userId)
+            .first()
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { route -> Route in
+                let filepath = basePath + route.image_name
+                try FileManager.default.removeItem(atPath: filepath)
+                return route
+            }
+            .flatMapThrowing { $0.delete(on: req.db) }
+            .flatMapThrowing { return Response.init(status: .ok) }
+
     }
     
     func getAllRoutes(req: Request) throws -> EventLoopFuture<[Route]> {
