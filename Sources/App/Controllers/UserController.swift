@@ -31,6 +31,7 @@ struct UserController: RouteCollection {
         let tokenProtected = userRoutes.grouped(Token.authenticator(), Token.guardMiddleware())
         tokenProtected.put("profile-image", use: updateUserImage)
         tokenProtected.put("cover-image", use: updateCoverImage)
+        tokenProtected.delete(use: deleteUser)
     }
 }
 
@@ -48,16 +49,29 @@ private extension UserController {
             .flatMapThrowing { try $0.asPublicWithRoutes() }
     }
     
-    /*
-     FOR DELETE USER
-     if user.profile_image != "profile_image.jpg" {
-     try FileManager.default.removeItem(atPath: basePath + user.profile_image)
- }
- 
- if user.cover_image != "cover_image.jpg" {
-     try FileManager.default.removeItem(atPath: basePath + user.cover_image)
- }
-     */
+    func deleteUser(req: Request) throws -> EventLoopFuture<Response> {
+        let sessionToken = try req.auth.require(Token.self)
+                
+        return User.query(on: req.db)
+            .filter(\.$id == sessionToken.userId)
+            .first()
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { user -> User in
+                let basePath = "/Users/filipculig/Desktop/repos/tourist-backend/Explore/Public/"
+
+                if user.profile_image != "profile_image.jpg" {
+                    try FileManager.default.removeItem(atPath: basePath + user.profile_image)
+                }
+                
+                if user.cover_image != "cover_image.jpg" {
+                    try FileManager.default.removeItem(atPath: basePath + user.cover_image)
+                }
+                
+                return user
+            }
+            .flatMapThrowing { $0.delete(on: req.db) }
+            .flatMapThrowing { return .init(status: .ok) }
+    }
     
     func updateUserImage(req: Request) throws -> EventLoopFuture<EventLoopFuture<Response>> {
         let input = try req.content.decode(UserImageUpdate.self)
