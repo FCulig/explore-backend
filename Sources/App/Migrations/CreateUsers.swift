@@ -18,6 +18,7 @@ struct CreateUsers: Migration {
             .unique(on: "username")
             .field("password", .string, .required)
             .field("profile_image", .string, .sql(.default("profile_image.jpg")))
+            .field("cover_image", .string, .sql(.default("cover_image.jpg")))
             .field("created_at", .datetime, .required)
             .field("updated_at", .datetime, .required)
             .create()

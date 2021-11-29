@@ -19,6 +19,7 @@ final class User: Model {
         let username: String
         let email: String
         let profile_image: String
+        let cover_image: String
         let createdAt: Date?
         let updatedAt: Date?
     }
@@ -28,6 +29,7 @@ final class User: Model {
         let username: String
         let email: String
         let profile_image: String
+        let cover_image: String
         let routes: [Route]
         let createdAt: Date?
         let updatedAt: Date?
@@ -54,6 +56,9 @@ final class User: Model {
     @Field(key: "profile_image")
     var profile_image: String
     
+    @Field(key: "cover_image")
+    var cover_image: String
+    
     @Children(for: \.$user)
     var routes: [Route]
     
@@ -72,13 +77,15 @@ final class User: Model {
         username: String,
         email: String,
         password: String,
-        profile_image: String = "profile_image.jpg"
+        profile_image: String = "profile_image.jpg",
+        cover_image: String = "cover_image.jpg"
     ) {
         self.id = id
         self.email = email
         self.username = username
         self.password = password
         self.profile_image = profile_image
+        self.cover_image = cover_image
     }
 }
 
@@ -99,6 +106,7 @@ extension User {
             username: username,
             email: email,
             profile_image: profile_image,
+            cover_image: cover_image,
             createdAt: createdAt,
             updatedAt: updatedAt
         )
@@ -110,6 +118,7 @@ extension User {
             username: username,
             email: email,
             profile_image: profile_image,
+            cover_image: cover_image,
             routes: routes,
             createdAt: createdAt,
             updatedAt: updatedAt
@@ -167,3 +176,10 @@ extension UserLogin: Validatable {
 struct UserImageUpdate: Content {
     let profile_image: File
 }
+
+// MARK: - CoverImageUpdate -
+
+struct CoverImageUpdate: Content {
+    let cover_image: File
+}
+
